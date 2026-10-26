@@ -1,0 +1,25 @@
+/* Stile globale per l'applicazione */
+body {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Micro-animazione leggera sulle card dei prodotti */
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Immagini dei prodotti sempre proporzionate */
+.product-card-img {
+  height: 200px;
+  object-fit: contain;
+  background-color: #ffffff;
+  padding: 1rem;
+}
