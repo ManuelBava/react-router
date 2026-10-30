@@ -1,14 +1,33 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ArrowLeft, Star, ShoppingBag, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  Star,
+  ShoppingBag,
+  Check,
+  Plus,
+  Minus,
+  ShoppingCart,
+} from "lucide-react";
+import { useECommerceContext } from "../contexts/ECommerceContext";
 
 export default function Product() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
+  const {
+    handleAddToCart,
+    handleIncreaseQuantity,
+    handleDecreaseQuantity,
+    isAdded,
+    cartProducts,
+  } = useECommerceContext();
 
   const navigate = useNavigate();
+
+  // Controlliamo se questo prodotto è già nel carrello globale
+  const cartItem = cartProducts.find((item) => item.id === product?.id);
+  const isInCart = Boolean(cartItem);
 
   useEffect(() => {
     async function getProduct() {
@@ -47,17 +66,14 @@ export default function Product() {
     getProduct();
   }, [id, navigate]);
 
-  // Gestione click "Aggiungi al Carrello" con feedback visivo temporaneo
-  const handleAddToCart = () => {
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
-  };
-
   return (
     <section className="my-4">
       {/* Bottone Torna Indietro */}
       <div className="mb-4">
-        <Link to="/products" className="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <Link
+          to="/products"
+          className="btn btn-outline-secondary btn-sm rounded-pill px-3"
+        >
           <ArrowLeft size={16} className="me-1" />
           Torna ai prodotti
         </Link>
@@ -67,7 +83,9 @@ export default function Product() {
       {isLoading && (
         <div className="d-flex justify-content-center align-items-center py-5 gap-3">
           <div className="spinner-border text-primary" role="status"></div>
-          <span className="text-secondary fw-medium">Caricamento scheda prodotto...</span>
+          <span className="text-secondary fw-medium">
+            Caricamento scheda prodotto...
+          </span>
         </div>
       )}
 
@@ -99,9 +117,13 @@ export default function Product() {
               <div className="d-flex align-items-center gap-2 mb-3">
                 <div className="d-flex align-items-center text-warning">
                   <Star size={18} fill="currentColor" />
-                  <span className="fw-bold ms-1 text-dark">{product.rating}</span>
+                  <span className="fw-bold ms-1 text-dark">
+                    {product.rating}
+                  </span>
                 </div>
-                <span className="text-secondary small">• Brand: {product.brand || "Generico"}</span>
+                <span className="text-secondary small">
+                  • Brand: {product.brand || "Generico"}
+                </span>
               </div>
             )}
 
@@ -117,29 +139,96 @@ export default function Product() {
 
             <hr className="my-4 opacity-25" />
 
-            {/* Azioni */}
-            <div className="d-flex flex-wrap gap-3 align-items-center">
-              <button
-                type="button"
-                className={`btn btn-lg rounded-pill px-4 d-flex align-items-center gap-2 ${
-                  isAdded ? "btn-success" : "btn-primary"
-                }`}
-                onClick={handleAddToCart}
-              >
-                {isAdded ? (
-                  <>
-                    <Check size={20} /> Aggiunto al carrello!
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag size={20} /> Aggiungi al carrello
-                  </>
-                )}
-              </button>
+            {/* Azioni Carrello */}
+            <div className="d-flex flex-column gap-3">
+              {!isInCart ? (
+                /* Prodotto NON ancora nel carrello: Mostra "Aggiungi al carrello" */
+                <div className="d-flex flex-wrap gap-3 align-items-center">
+                  <button
+                    type="button"
+                    className={`btn btn-lg rounded-pill px-4 d-flex align-items-center gap-2 ${
+                      isAdded ? "btn-success" : "btn-primary"
+                    }`}
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    {isAdded ? (
+                      <>
+                        <Check size={20} /> Aggiunto al carrello!
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag size={20} /> Aggiungi al carrello
+                      </>
+                    )}
+                  </button>
 
-              <span className="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
-                Disponibile in magazzino
-              </span>
+                  <span className="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+                    Disponibile in magazzino
+                  </span>
+                </div>
+              ) : (
+                /* Prodotto GIÀ nel carrello: Box professionale con gestione quantità */
+                <div className="card border-primary border-opacity-25 bg-light p-3 rounded-4 shadow-sm">
+                  <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-medium d-inline-flex align-items-center gap-1">
+                          <Check size={14} /> Già nel carrello
+                        </span>
+                        <span className="text-secondary small">
+                          Totale:{" "}
+                          <strong className="text-dark">
+                            €{(product.price * cartItem.quantity).toFixed(2)}
+                          </strong>
+                        </span>
+                      </div>
+                      <span className="small text-secondary">
+                        Quantità nel carrello:
+                      </span>
+                    </div>
+
+                    {/* Controller Stepper Quantità (+ / -) */}
+                    <div className="d-flex align-items-center bg-white border rounded-pill p-1 shadow-sm align-self-start align-self-sm-auto">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary rounded-circle border-0 d-flex align-items-center justify-content-center"
+                        style={{ width: "36px", height: "36px" }}
+                        onClick={() => handleDecreaseQuantity(product.id)}
+                        title="Diminuisci quantità"
+                      >
+                        <Minus size={16} />
+                      </button>
+
+                      <span
+                        className="fw-bold px-3 fs-5 text-dark user-select-none"
+                        style={{ minWidth: "40px", textAlign: "center" }}
+                      >
+                        {cartItem.quantity}
+                      </span>
+
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary rounded-circle border-0 d-flex align-items-center justify-content-center"
+                        style={{ width: "36px", height: "36px" }}
+                        onClick={() => handleIncreaseQuantity(product.id)}
+                        title="Aumenta quantità"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="d-flex gap-2 mt-3 pt-3 border-top">
+                    <Link
+                      to="/cart-products"
+                      className="btn btn-sm btn-outline-primary rounded-pill px-3 d-inline-flex align-items-center gap-2"
+                    >
+                      <ShoppingCart size={16} />
+                      Vai al carrello
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

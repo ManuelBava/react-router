@@ -1,5 +1,7 @@
 import { Link, NavLink } from "react-router";
 import { ShoppingBag } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
+import { useECommerceContext } from "../contexts/ECommerceContext";
 
 // 1. Definizione links
 const navLinks = [
@@ -13,11 +15,15 @@ const getNavLinkClass = ({ isActive }) =>
   `btn btn-sm rounded-pill px-3 ${isActive ? "btn-primary" : "btn-outline-primary"}`;
 
 export default function HeaderContent() {
+  const { cartProductsLength } = useECommerceContext();
   return (
     <header className="bg-white shadow-sm rounded-4 px-4 py-3 mb-4">
-      <nav className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <nav className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         {/* Logo / Brand */}
-        <Link to="/" className="text-decoration-none d-flex align-items-center gap-2">
+        <Link
+          to="/"
+          className="text-decoration-none d-flex align-items-center gap-2"
+        >
           <span className="badge bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center">
             <ShoppingBag size={20} className="text-white" />
           </span>
@@ -32,6 +38,22 @@ export default function HeaderContent() {
             </NavLink>
           ))}
         </div>
+        <NavLink
+          className="position-relative d-inline-block"
+          key="/cart-products"
+          to="/cart-products"
+        >
+          {/* Icona del Carrello */}
+          <ShoppingCart size={24} className="text-secondary" />
+
+          {/* Pallino Rosso del Badge Bootstrap */}
+          {cartProductsLength > 0 && (
+            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {cartProductsLength}
+              <span className="visually-hidden">elementi nel carrello</span>
+            </span>
+          )}
+        </NavLink>
       </nav>
     </header>
   );
